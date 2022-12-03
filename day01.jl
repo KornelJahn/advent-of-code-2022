@@ -3,9 +3,8 @@ using Test
 abstract type PuzzlePartTrait end
 struct Part{N} <: PuzzlePartTrait end
 
-"""Parse input into elf-wise sums of calories."""
 function parse_input(input::AbstractString)
-    groupwise = split(input, "\n\n")
+    groupwise = split(strip(input), "\n\n")
     convert(group) = parse.(Ref(Int), split(strip(group), "\n"))
     return sum.(convert.(groupwise))
 end
@@ -21,8 +20,9 @@ function solve(::Part{2}, sums::AbstractSums)
 end
 
 function main()
+    parsed = parse_input(read(ARGS[1], String))
     for part_idx in (1, 2)
-        solution = solve(Part{part_idx}(), parse_input(read(ARGS[1], String)))
+        solution = solve(Part{part_idx}(), parsed)
         println("Solution (part $part_idx): $solution")
     end
 end

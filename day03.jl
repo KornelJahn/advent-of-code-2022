@@ -64,16 +64,18 @@ function solve(part::PuzzlePartTrait, lines::AbstractLines)
     return sum(iter_priorities(part, lines))
 end
 
+parse_input(input::AbstractString) = split(strip(input), "\n")
+
 function main()
-    input = readlines(ARGS[1], keep=false)
+    parsed = parse_input(read(ARGS[1], String))
     for part_idx in (1, 2)
-        solution = solve(Part{part_idx}(), input)
+        solution = solve(Part{part_idx}(), parsed)
         println("Solution (part $part_idx): $solution")
     end
 end
 
 function test()
-    raw = """
+    input = """
         vJrwpWtwJgWrhcsFMMfFFhFp
         jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
         PmmdzqPrVvPwwTWBwg
@@ -81,9 +83,9 @@ function test()
         ttgJtRGJQctTZtZT
         CrZsJsPPZsGzwwsLwLmpwMDw
         """
-    input = split(raw, keepempty=true)[begin:(end-1)]
-    @test solve(Part{1}(), input) == 157
-    @test solve(Part{2}(), input) == 70
+    parsed = parse_input(input)
+    @test solve(Part{1}(), parsed) == 157
+    @test solve(Part{2}(), parsed) == 70
 end
 
 if length(ARGS) > 0

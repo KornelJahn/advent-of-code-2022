@@ -82,9 +82,12 @@ function solve(part::PuzzlePartTrait, encrypted_strategy::AbstractStrategy)
     return sum(points)
 end
 
+parse_input(input::AbstractString) = readdlm(IOBuffer(input), Char)
+
 function main()
+    parsed = parse_input(read(ARGS[1], String))
     for part_idx in (1, 2)
-        solution = solve(Part{part_idx}(), readdlm(ARGS[1], Char))
+        solution = solve(Part{part_idx}(), parsed)
         println("Solution (part $part_idx): $solution")
     end
 end
@@ -95,9 +98,9 @@ function test()
         B X
         C Z
         """
-    encrypted_strategy = readdlm(IOBuffer(input), Char)
-    @test solve(Part{1}(), encrypted_strategy) == 15
-    @test solve(Part{2}(), encrypted_strategy) == 12
+    parsed = parse_input(input)
+    @test solve(Part{1}(), parsed) == 15
+    @test solve(Part{2}(), parsed) == 12
 end
 
 if length(ARGS) > 0
