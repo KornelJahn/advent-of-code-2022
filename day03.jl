@@ -21,20 +21,7 @@ end
 Iterate over rucksack groups of 3 for the 2nd part of the puzzle.
 """
 function iter_rucksacks(::Part{2}, lines::AbstractLines; group_size=3)
-    Channel() do channel
-        state::Any = nothing
-        next = iterate(lines)
-        while next != nothing
-            buffer = Vector{String}(undef, 3)
-            for i in 1:group_size
-                (buffer[i], state) = next
-                @assert next != nothing
-                next = iterate(lines, state)
-            end
-            push!(channel, buffer)
-            next = iterate(lines, state)
-        end
-    end
+    return Iterators.partition(lines, 3)
 end
 
 """
@@ -78,14 +65,15 @@ function solve(part::PuzzlePartTrait, lines::AbstractLines)
 end
 
 function main()
+    input = readlines(ARGS[1], keep=false)
     for part_idx in (1, 2)
-        solution = solve(Part{part_idx}(), readlines(ARGS[1], keep=false))
+        solution = solve(Part{part_idx}(), input)
         println("Solution (part $part_idx): $solution")
     end
 end
 
 function test()
-    input = """
+    raw = """
         vJrwpWtwJgWrhcsFMMfFFhFp
         jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
         PmmdzqPrVvPwwTWBwg
@@ -93,9 +81,9 @@ function test()
         ttgJtRGJQctTZtZT
         CrZsJsPPZsGzwwsLwLmpwMDw
         """
-    lines = split(input, keepempty=true)[begin:(end-1)]
-    @test solve(Part{1}(), lines) == 157
-    @test solve(Part{2}(), lines) == 70
+    input = split(raw, keepempty=true)[begin:(end-1)]
+    @test solve(Part{1}(), input) == 157
+    @test solve(Part{2}(), input) == 70
 end
 
 if length(ARGS) > 0
