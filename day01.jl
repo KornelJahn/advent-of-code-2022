@@ -11,13 +11,9 @@ end
 
 AbstractSums = AbstractVector{<:Integer}
 
-function solve(::Part{1}, sums::AbstractSums)
-    return maximum(sums)
-end
+solve(::Part{1}, sums::AbstractSums) = maximum(sums)
 
-function solve(::Part{2}, sums::AbstractSums)
-    return sum(sort(sums, rev=true)[1:3])
-end
+solve(::Part{2}, sums::AbstractSums) = sum(sort(sums, rev=true)[1:3])
 
 function main()
     parsed = parse_input(read(ARGS[1], String))
