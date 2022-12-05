@@ -6,15 +6,15 @@ using ..Puzzle: Day, Part, PartTrait
 import ..Puzzle: parse_input, solve
 
 """
-Return a 2D array, each 4-length row (a, b, c, d) defining two ranges (a, b)
-and (c, d).
+Return a 2D array, each 4-length column (a, b, c, d)^T defining two ranges
+(a, b) and (c, d).
 """
 function parse_input(::Day{4}, raw::AbstractString)
     regex = r"^(\d+)-(\d+),(\d+)-(\d+)$"
     lines = split(strip(raw), "\n")
-    input = Array{Int}(undef, length(lines), 4)
+    input = Array{Int}(undef, 4, length(lines))
     for (i, line) in enumerate(lines)
-        input[i, :] = parse.(Ref(Int), match(regex, line).captures)
+        input[:, i] = parse.(Ref(Int), match(regex, line).captures)
     end
     return input
 end
@@ -22,13 +22,15 @@ end
 AbstractInput = AbstractArray{<:Integer, 2}
 
 function solve(::Day{4}, ::Part{1}, input::AbstractInput)
-    # TODO: revise iteration order for more efficient vectorization
-    return sum(are_completely_overlapping(row...) for row in eachrow(input))
+    # return sum(are_completely_overlapping.(eachrow(input)...))
+    # NOTE: this solution is faster
+    return sum(are_completely_overlapping(col...) for col in eachcol(input))
 end
 
 function solve(::Day{4}, ::Part{2}, input::AbstractInput)
-    # TODO: revise iteration order for more efficient vectorization
-    return sum(are_overlapping(row...) for row in eachrow(input))
+    # return sum(are_overlapping.(eachrow(input)...))
+    # NOTE: this solution is faster
+    return sum(are_overlapping(col...) for col in eachcol(input))
 end
 
 function are_completely_overlapping(a, b, c, d)
