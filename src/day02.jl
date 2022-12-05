@@ -1,10 +1,26 @@
-using Test
+module Day2
+
+export parse_input, solve
+
 using DelimitedFiles
+using ..Puzzle: Day, Part, PartTrait
+import ..Puzzle: parse_input, solve
 
-abstract type PuzzlePartTrait end
-struct Part{N} <: PuzzlePartTrait end
+"""
+Return a 2D array of characters, each row containing the encrypted choice of
+the opponent and me.
+"""
+parse_input(::Day{2}, raw::AbstractString) = readdlm(IOBuffer(raw), Char)
 
-AbstractStrategy = AbstractArray{<:AbstractChar, 2}
+AbstractInput = AbstractArray{<:AbstractChar, 2}
+
+function solve(::Day{2}, part::PartTrait, input::AbstractInput)
+    strategy = similar(input, Int)
+    strategy[:, 1] = decode_opponent_choice.(input[:, 1])
+    strategy[:, 2] = decode_my_strategy.(Ref(part), input[:, 2])
+    points = calculate_my_points.(Ref(part), strategy[:, 1], strategy[:, 2])
+    return sum(points)
+end
 
 const ROCK = 1
 const PAPER = 2
@@ -13,23 +29,14 @@ const LOSS = -1
 const DRAW = 0
 const WIN = 1
 
-"""
-Decode the opponent's choice.
-"""
 function decode_opponent_choice(choice::AbstractChar)
     return Dict('A' => ROCK, 'B' => PAPER, 'C' => SCISSORS)[choice]
 end
 
-"""
-Decode my choice from the 1st part of the puzzle.
-"""
 function decode_my_strategy(::Part{1}, choice::AbstractChar)
     return Dict('X' => ROCK, 'Y' => PAPER, 'Z' => SCISSORS)[choice]
 end
 
-"""
-Decode the desired outcome from the 2nd part of the puzzle.
-"""
 function decode_my_strategy(::Part{2}, outcome::AbstractChar)
     return Dict('X' => LOSS, 'Y' => DRAW, 'Z' => WIN)[outcome]
 end
@@ -50,9 +57,6 @@ end
 
 const OUTCOMES = make_outcome_matrix()
 
-"""
-Calculate my points in a round for the 1st part of the puzzle.
-"""
 function calculate_my_points(
     ::Part{1},
     opponent_choice::Integer,
@@ -62,9 +66,6 @@ function calculate_my_points(
     return 3 * (1 + outcome) + my_choice
 end
 
-"""
-Calculate my points in a round for the 2nd part of the puzzle.
-"""
 function calculate_my_points(
     ::Part{2},
     opponent_choice::Integer,
@@ -74,37 +75,4 @@ function calculate_my_points(
     return 3 * (1 + outcome) + my_choice
 end
 
-function solve(part::PuzzlePartTrait, encrypted_strategy::AbstractStrategy)
-    strategy = similar(encrypted_strategy, Int)
-    strategy[:, 1] = decode_opponent_choice.(encrypted_strategy[:, 1])
-    strategy[:, 2] = decode_my_strategy.(Ref(part), encrypted_strategy[:, 2])
-    points = calculate_my_points.(Ref(part), strategy[:, 1], strategy[:, 2])
-    return sum(points)
-end
-
-parse_input(input::AbstractString) = readdlm(IOBuffer(input), Char)
-
-function main()
-    parsed = parse_input(read(ARGS[1], String))
-    for part_idx in (1, 2)
-        solution = solve(Part{part_idx}(), parsed)
-        println("Solution (part $part_idx): $solution")
-    end
-end
-
-function test()
-    input = """
-        A Y
-        B X
-        C Z
-        """
-    parsed = parse_input(input)
-    @test solve(Part{1}(), parsed) == 15
-    @test solve(Part{2}(), parsed) == 12
-end
-
-if length(ARGS) > 0
-    main()
-else
-    test()
-end
+end # module
