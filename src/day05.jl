@@ -8,7 +8,7 @@ import ..Puzzle: parse_input, solve
 """
 Return crate stacks as a vector containing vectors of characters and movement
 rules as a 2D array of integers, with columns as containing the crate quantity,
-an d source and target stacks, respectively.
+and source and target stacks, respectively.
 """
 function parse_input(::Day{5}, raw::AbstractString)
     (raw_stacks, raw_rules) = split(raw, "\n\n")
