@@ -3,7 +3,7 @@ include("day01.jl")
 include("day02.jl")
 include("day03.jl")
 include("day04.jl")
-# include("day05.jl")
+include("day05.jl")
 # include("day06.jl")
 # include("day07.jl")
 # include("day08.jl")
@@ -29,7 +29,7 @@ using .Day1
 using .Day2
 using .Day3
 using .Day4
-# using .Day5
+using .Day5
 # using .Day6
 # using .Day7
 # using .Day8
