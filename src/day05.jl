@@ -6,9 +6,11 @@ using ..Puzzle: Day, Part, PartTrait
 import ..Puzzle: parse_input, solve
 
 """
-Return crate stacks as a vector containing vectors of characters and movement
-rules as a 2D array of integers, with columns as containing the crate quantity,
-and source and target stacks, respectively.
+Return a pair of containers describing crate distribution among the stacks and
+movement rules, respectively. Crate distribution is represented as a vector
+containing vectors of characters. Movement rules are stored as a 2D array of
+integers, with columns containing the number of lifted crates, and the source
+and target stack indices, respectively.
 """
 function parse_input(::Day{5}, raw::AbstractString)
     (raw_stacks, raw_rules) = split(raw, "\n\n")
