@@ -41,7 +41,7 @@ end
 
 function solve(::Day{7}, ::Part{1}, input)
     sizes = collect(iter_dirs_dfs(input))
-    return sum(filter(x->x<=100000, sizes))
+    return sum(filter(<=(100000), sizes))
 end
 
 function solve(::Day{7}, ::Part{2}, input)
@@ -49,8 +49,7 @@ function solve(::Day{7}, ::Part{2}, input)
     TOTAL = sizes[end]
     CAPACITY = 70000000
     NEEDED = 30000000
-    # TODO
-    return nothing
+    return minimum(filter(>=(NEEDED + TOTAL - CAPACITY), sizes))
 end
 
 iter_dirs_dfs(node) = Channel() do ch
@@ -59,9 +58,11 @@ end
 
 function dirs_dfs_inner!(ch::Channel, node)
     if node isa Integer
+        # Do not push outer (leaf) nodes (files)
         return node
     else
         total = sum(dirs_dfs_inner!(ch, child) for child in node)
+        # Push, however, inner nodes (subdirectories)
         push!(ch, total)
         return total
     end
