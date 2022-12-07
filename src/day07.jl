@@ -27,7 +27,7 @@ function interpret!(commands::AbstractVector{<:AbstractString})
         elseif cmd[1] == "ls"
             append!(
                 nodes,
-                parse.(Ref(Int), filter(x->(x != "dir"), cmd[2:2:end]))
+                parse.(Ref(Int), filter(!=("dir"), cmd[2:2:end]))
             )
         else
             error("invalid command")
