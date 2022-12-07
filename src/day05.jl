@@ -7,14 +7,14 @@ import ..Puzzle: parse_input, solve
 
 """
 Return a pair of containers describing crate distribution among the stacks and
-movement rules, respectively. Crate distribution is represented as a vector
-containing vectors of characters. Movement rules are stored as a 2D array of
+movement instructions, respectively. Crate distribution is represented as a vector
+containing vectors of characters. Movement instructions are stored as a 2D array of
 integers, with columns containing the number of lifted crates, and the source
 and target stack indices, respectively.
 """
 function parse_input(::Day{5}, raw::AbstractString)
-    (raw_stacks, raw_rules) = split(raw, "\n\n")
-    return parse_stacks(raw_stacks), parse_rules(raw_rules)
+    (raw_stacks, raw_instructions) = split(raw, "\n\n")
+    return parse_stacks(raw_stacks), parse_instructions(raw_instructions)
 end
 
 function parse_stacks(raw::AbstractString)
@@ -36,14 +36,14 @@ function parse_stacks(raw::AbstractString)
     return stacks
 end
 
-function parse_rules(raw::AbstractString)
+function parse_instructions(raw::AbstractString)
     lines = split(strip(raw), "\n")
     regex = r"^move (\d+) from (\d+) to (\d+)$"
-    rules = Array{Int}(undef, 3, length(lines))
+    instructions = Array{Int}(undef, 3, length(lines))
     for (i, line) in enumerate(lines)
-        rules[:, i] = parse.(Ref(Int), match(regex, line).captures)
+        instructions[:, i] = parse.(Ref(Int), match(regex, line).captures)
     end
-    return rules
+    return instructions
 end
 
 AbstractInput = Tuple{
@@ -52,10 +52,10 @@ AbstractInput = Tuple{
 }
 
 function solve(::Day{5}, part::PartTrait, input::AbstractInput)
-    (stacks, rules) = input
+    (stacks, instructions) = input
     stacks = deepcopy(stacks)
-    for rule in eachcol(rules)
-        (qty, source, target) = rule
+    for instruction in eachcol(instructions)
+        (qty, source, target) = instruction
         N = length(stacks[source])
         transferred = order(part, splice!(stacks[source], (N-qty+1):N))
         append!(stacks[target], transferred)
