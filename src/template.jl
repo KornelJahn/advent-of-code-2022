@@ -13,7 +13,7 @@ function parse_input(::Day{DAY}, raw::AbstractString)
     return input
 end
 
-AbstractInput = nothing
+AbstractInput = Any
 
 function solve(::Day{DAY}, ::Part{1}, input::AbstractInput)
     return nothing
