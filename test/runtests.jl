@@ -15,7 +15,7 @@ const solutions = Dict{String, Array{Any, 2}}(
         "CMZ" "MCD"; # Day 05
         (7, 5, 6, 10, 11) (19, 23, 23, 29, 26); # Day 06
         95437 24933642; # Day 07
-        nothing nothing; # Day 08
+        21 8; # Day 08
         nothing nothing; # Day 09
         nothing nothing; # Day 10
         nothing nothing; # Day 11
@@ -42,7 +42,7 @@ const solutions = Dict{String, Array{Any, 2}}(
         "SVFDLGLWV" "DCVTCVPCL"; # Day 05
         (1531,) (2518,); # Day 06
         1390824 7490863; # Day 07
-        nothing nothing; # Day 08
+        1700 470596; # Day 08
         nothing nothing; # Day 09
         nothing nothing; # Day 10
         nothing nothing; # Day 11
