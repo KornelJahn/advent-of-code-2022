@@ -17,16 +17,12 @@ end
 AbstractInput = AbstractArray{<:Integer, 2}
 
 function solve(::Day{8}, ::Part{1}, input::AbstractInput)
-    return count(
-        indices->is_visible(input, indices...),
-        Iterators.product(1:size(input, 1), 1:size(input, 2))
-    )
+    return count(I->is_visible(input, Tuple(I)...), CartesianIndices(input))
 end
 
 function solve(::Day{8}, ::Part{2}, input::AbstractInput)
     return maximum(
-        scenic_score(input, i, j) for (i, j) in
-        Iterators.product(1:size(input, 1), 1:size(input, 2))
+        scenic_score(input, Tuple(I)...) for I in CartesianIndices(input)
     )
 end
 
