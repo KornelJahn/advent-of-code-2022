@@ -2,19 +2,17 @@ module Day8
 
 export parse_input, solve
 
-using ..Puzzle: Day, Part, PartTrait
+using .Iterators: takewhile
+using ..Puzzle: Day, Part
 import ..Puzzle: parse_input, solve
 
-"""
-Return a 2D array of integers.
-"""
+AbstractInput = AbstractArray{<:Integer, 2}
+
 function parse_input(::Day{8}, raw::AbstractString)
-    n = length(collect(Iterators.takewhile(!=('\n'), raw)))
+    n = length(collect(takewhile(!=('\n'), raw)))
     v = parse.(Int, Vector{Char}(replace(raw, "\n" => "")))
     return reshape(v, (n, n))
 end
-
-AbstractInput = AbstractArray{<:Integer, 2}
 
 function solve(::Day{8}, ::Part{1}, input::AbstractInput)
     return count(I->is_visible(input, Tuple(I)...), CartesianIndices(input))
@@ -32,16 +30,15 @@ end
 
 function directions(A::AbstractInput, i::Integer, j::Integer)
     @views return [
-        A[i, (j-1):-1:1],
-        A[i, (j+1):end],
-        A[(i-1):-1:1, j],
-        A[(i+1):end, j],
+        A[i, (j-1):-1:1], # up
+        A[i, (j+1):end], # down
+        A[(i-1):-1:1, j], # left
+        A[(i+1):end, j], # right
     ]
 end
 
 function scenic_score(A::AbstractInput, i::Integer, j::Integer)
-    height = A[i, j]
-    return prod(v->viewing_distance(v, height), directions(A, i, j))
+    return prod(v->viewing_distance(v, A[i, j]), directions(A, i, j))
 end
 
 function viewing_distance(v::AbstractVector{<:Integer}, height::Integer)

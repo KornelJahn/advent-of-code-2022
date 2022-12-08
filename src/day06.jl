@@ -2,17 +2,14 @@ module Day6
 
 export parse_input, solve
 
-using ..Puzzle: Day, Part, PartTrait
+using ..Puzzle: Day, Part
 import ..Puzzle: parse_input, solve
 
-"""
-Return a vector of strings.
-"""
+AbstractInput = AbstractVector{<:AbstractString}
+
 function parse_input(::Day{6}, raw::AbstractString)
     return split(strip(raw), "\n")
 end
-
-AbstractInput = AbstractVector{<:AbstractString}
 
 function solve(::Day{6}, ::Part{1}, input::AbstractInput)
     return Tuple(find_start.(input, windowsize=4))

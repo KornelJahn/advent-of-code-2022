@@ -5,16 +5,26 @@ export parse_input, solve
 using ..Puzzle: Day, Part, PartTrait
 import ..Puzzle: parse_input, solve
 
-"""
-Return a pair of containers describing crate distribution among the stacks and
-movement instructions, respectively. Crate distribution is represented as a vector
-containing vectors of characters. Movement instructions are stored as a 2D array of
-integers, with columns containing the number of lifted crates, and the source
-and target stack indices, respectively.
-"""
+AbstractInput = Tuple{
+    <:AbstractVector{<:AbstractVector{<:AbstractChar}},
+    <:AbstractArray{<:Integer, 2}
+}
+
 function parse_input(::Day{5}, raw::AbstractString)
     (raw_stacks, raw_instructions) = split(raw, "\n\n")
     return parse_stacks(raw_stacks), parse_instructions(raw_instructions)
+end
+
+function solve(::Day{5}, part::PartTrait, input::AbstractInput)
+    (stacks, instructions) = input
+    stacks = deepcopy(stacks)
+    for instruction in eachcol(instructions)
+        (qty, source, target) = instruction
+        N = length(stacks[source])
+        transferred = order(part, splice!(stacks[source], (N-qty+1):N))
+        append!(stacks[target], transferred)
+    end
+    return string((stack[end] for stack in stacks)...)
 end
 
 function parse_stacks(raw::AbstractString)
@@ -46,27 +56,8 @@ function parse_instructions(raw::AbstractString)
     return instructions
 end
 
-AbstractInput = Tuple{
-    <:AbstractVector{<:AbstractVector{<:AbstractChar}},
-    <:AbstractArray{<:Integer, 2}
-}
-
-function solve(::Day{5}, part::PartTrait, input::AbstractInput)
-    (stacks, instructions) = input
-    stacks = deepcopy(stacks)
-    for instruction in eachcol(instructions)
-        (qty, source, target) = instruction
-        N = length(stacks[source])
-        transferred = order(part, splice!(stacks[source], (N-qty+1):N))
-        append!(stacks[target], transferred)
-    end
-    return string((stack[end] for stack in stacks)...)
-end
-
-# CrateMover 9000
 order(::Part{1}, crates::AbstractVector{<:AbstractChar}) = reverse(crates)
 
-# CrateMover 9001
 order(::Part{2}, crates::AbstractVector{<:AbstractChar}) = crates
 
 end # module
