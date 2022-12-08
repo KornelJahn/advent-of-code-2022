@@ -1,9 +1,8 @@
 # Advent of Code 2022
 
-Solutions are in [Julia](https://julialang.org/) language.
+Solutions of [Advent of Code 2022](https://adventofcode.com/2022) puzzles in [Julia](https://julialang.org/) language.
 
-Solutions for example and real inputs are implemented as unit tests. Within the
-repo directory, they can be run as
+They can be tested for example and real inputs by running unit test from the repo directory as
 ```sh
 julia test/runtests.jl
 ```
