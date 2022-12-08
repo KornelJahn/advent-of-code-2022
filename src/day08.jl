@@ -17,18 +17,16 @@ end
 AbstractInput = AbstractArray{<:Integer, 2}
 
 function solve(::Day{8}, ::Part{1}, input::AbstractInput)
-    inner_count = count(
+    return count(
         indices->is_visible(input, indices...),
-        Iterators.product(2:(size(input, 1) - 1), 2:(size(input, 2) - 1))
+        Iterators.product(1:size(input, 1), 1:size(input, 2))
     )
-    sides_count = 2 * (sum(size(input)) - 2)
-    return sides_count + inner_count
 end
 
 function solve(::Day{8}, ::Part{2}, input::AbstractInput)
     return maximum(
         scenic_score(input, i, j) for (i, j) in
-        Iterators.product(2:(size(input, 1) - 1), 2:(size(input, 2) - 1))
+        Iterators.product(1:size(input, 1), 1:size(input, 2))
     )
 end
 
