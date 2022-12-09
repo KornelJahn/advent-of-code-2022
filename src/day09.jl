@@ -16,6 +16,7 @@ function parse_input(::Day{9}, raw::AbstractString)
     return convert_line.(lines)
 end
 
+# FIXME: does not give correct answer for real input!
 function solve(::Day{9}, ::Part{1}, input::AbstractInput)
     return length(unique(tail_positions(input)))
 end
