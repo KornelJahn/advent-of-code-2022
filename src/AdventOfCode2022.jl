@@ -2,8 +2,8 @@ module AdventOfCode2022
 
 export FIRSTDAY, LASTDAY
 
-const FIRSTDAY = 1
-const LASTDAY = 9
+const FIRSTDAY = 10
+const LASTDAY = 10
 
 macro include_import_reexport_solutions()
     function make_ex(i::Integer)
