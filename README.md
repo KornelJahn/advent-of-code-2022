@@ -9,6 +9,6 @@ While inside the repository directory, start the Julia REPL and switch to the
 [Pkg package manager](https://docs.julialang.org/en/v1/stdlib/Pkg/) REPL by pressing `]`. Then execute:
 ```
 add .
-activate AdventOfCode2022
+activate .
 test
 ```
