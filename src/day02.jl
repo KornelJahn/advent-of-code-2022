@@ -1,25 +1,21 @@
-module Day2
-
-export parse_input, solve
+module Day02
 
 using DelimitedFiles
-using ..Puzzle: Day, Part
-import ..Puzzle: parse_input, solve
 
 AbstractInput = AbstractArray{<:AbstractChar, 2}
 
-parse_input(::Day{2}, raw::AbstractString) = readdlm(IOBuffer(raw), Char)
+parse_input(raw::AbstractString) = readdlm(IOBuffer(raw), Char)
 
-function solve(::Day{2}, part::Part{1}, input::AbstractInput)
+function solve_part1(input::AbstractInput)
     opponent_choices = decode_opponent_choice.(@view input[:, 1])
     my_choices = decode_my_choices.(@view input[:, 2])
-    return sum(calculate_my_points.(Ref(part), opponent_choices, my_choices))
+    return sum(calculate_my_points_part1.(opponent_choices, my_choices))
 end
 
-function solve(::Day{2}, part::Part{2}, input::AbstractInput)
+function solve_part2(input::AbstractInput)
     opponent_choices = decode_opponent_choice.(@view input[:, 1])
     my_outcomes = decode_my_outcomes.(@view input[:, 2])
-    return sum(calculate_my_points.(Ref(part), opponent_choices, my_outcomes))
+    return sum(calculate_my_points_part2.(opponent_choices, my_outcomes))
 end
 
 const ROCK = 1
@@ -54,8 +50,7 @@ end
 
 const MY_OUTCOMES = make_my_outcome_matrix()
 
-function calculate_my_points(
-    ::Part{1},
+function calculate_my_points_part1(
     opponent_choice::Integer,
     my_choice::Integer,
 )
@@ -63,8 +58,7 @@ function calculate_my_points(
     return 3 * (1 + my_outcome) + my_choice
 end
 
-function calculate_my_points(
-    ::Part{2},
+function calculate_my_points_part2(
     opponent_choice::Integer,
     my_outcome::Integer,
 )

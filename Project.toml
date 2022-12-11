@@ -1,0 +1,7 @@
+name = "AdventOfCode2022"
+uuid = "321bd86b-8c5f-47c4-968a-a2df45b7b68c"
+authors = ["Kornel Jahn <kjahn.public@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"

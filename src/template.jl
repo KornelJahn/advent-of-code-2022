@@ -1,22 +1,16 @@
-module DayDAY
-
-export parse_input, solve
-
-using ..Puzzle: Day, Part, PartTrait
-import ..Puzzle: parse_input, solve
+module DayNN
 
 AbstractInput = Any
 
-function parse_input(::Day{DAY}, raw::AbstractString)
-    input = nothing
-    return input
-end
-
-function solve(::Day{DAY}, ::Part{1}, input::AbstractInput)
+function parse_input(raw::AbstractString)
     return nothing
 end
 
-function solve(::Day{DAY}, ::Part{2}, input::AbstractInput)
+function solve_part1(input::AbstractInput)
+    return nothing
+end
+
+function solve_part2(input::AbstractInput)
     return nothing
 end
 

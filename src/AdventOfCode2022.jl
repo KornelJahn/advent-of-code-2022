@@ -1,25 +1,25 @@
-using Printf: @sprintf
+module AdventOfCode2022
 
-"""
-Generate include calls and using statements for available daily solutions.
-"""
-macro days()
+export FIRSTDAY, LASTDAY
+
+const FIRSTDAY = 1
+const LASTDAY = 9
+
+macro include_import_reexport_solutions()
     function make_ex(i::Integer)
-        d = @sprintf("%02d", i)
-        p = "$(@__DIR__)/day$d.jl"
-        if isfile(p)
-            return (
-                Expr(:call, :include, p),
-                Expr(:using, Expr(:., :., Symbol("Day$i"))),
-            )
-        else
-            return nothing
-        end
+        str = string(i, base=10, pad=2)
+        solution_path = joinpath(@__DIR__, "day$str.jl")
+        return (
+            Expr(:call, :include, solution_path),
+            Expr(:using, Expr(:., :., Symbol("Day$str"))),
+            Expr(:export, Symbol("Day$str")),
+        )
     end
 
-    puzzle_mod_path = "$(@__DIR__)/puzzle.jl"
-    exs = Iterators.flatten(filter(!isnothing, make_ex.(1:25)))
-    return Expr(:toplevel, Expr(:call, :include, puzzle_mod_path), exs...)
+    exs = Iterators.flatten(make_ex.(FIRSTDAY:LASTDAY))
+    return Expr(:toplevel, exs...)
 end
 
-@days
+@include_import_reexport_solutions
+
+end # module

@@ -1,22 +1,15 @@
-module Day1
-
-export parse_input, solve
-
-using ..Puzzle: Day, Part
-import ..Puzzle: parse_input, solve
+module Day01
 
 AbstractInput = AbstractVector{<:AbstractVector{<:Integer}}
 
-function parse_input(::Day{1}, raw::AbstractString)
+function parse_input(raw::AbstractString)
     groups = split(strip(raw), "\n\n")
     convert(group) = parse.(Ref(Int), split(strip(group), "\n"))
     return convert.(groups)
 end
 
-solve(::Day{1}, ::Part{1}, input::AbstractInput) = maximum(sum.(input))
+solve_part1(input::AbstractInput) = maximum(sum.(input))
 
-solve(::Day{1}, ::Part{2}, input::AbstractInput) = sum(
-    sort(sum.(input), rev=true)[1:3]
-)
+solve_part2(input::AbstractInput) = sum(sort(sum.(input), rev=true)[1:3])
 
 end # module

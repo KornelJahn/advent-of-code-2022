@@ -1,27 +1,28 @@
-module Day5
+module Day05
 
-export parse_input, solve
-
-using ..Puzzle: Day, Part, PartTrait
-import ..Puzzle: parse_input, solve
+AbstractCrateStack = AbstractVector{<:AbstractChar}
 
 AbstractInput = Tuple{
-    <:AbstractVector{<:AbstractVector{<:AbstractChar}},
+    <:AbstractVector{<:AbstractCrateStack},
     <:AbstractArray{<:Integer, 2}
 }
 
-function parse_input(::Day{5}, raw::AbstractString)
+function parse_input(raw::AbstractString)
     (raw_stacks, raw_instructions) = split(raw, "\n\n")
     return parse_stacks(raw_stacks), parse_instructions(raw_instructions)
 end
 
-function solve(::Day{5}, part::PartTrait, input::AbstractInput)
+solve_part1(input::AbstractInput) = rearranged_top_crates(input, order_part1)
+
+solve_part2(input::AbstractInput) = rearranged_top_crates(input, order_part2)
+
+function rearranged_top_crates(input::AbstractInput, order_func)
     (stacks, instructions) = input
     stacks = deepcopy(stacks)
     for instruction in eachcol(instructions)
         (qty, source, target) = instruction
         N = length(stacks[source])
-        transferred = order(part, splice!(stacks[source], (N-qty+1):N))
+        transferred = order_func(splice!(stacks[source], (N-qty+1):N))
         append!(stacks[target], transferred)
     end
     return string((stack[end] for stack in stacks)...)
@@ -56,8 +57,8 @@ function parse_instructions(raw::AbstractString)
     return instructions
 end
 
-order(::Part{1}, crates::AbstractVector{<:AbstractChar}) = reverse(crates)
+order_part1(crates::AbstractCrateStack) = reverse(crates)
 
-order(::Part{2}, crates::AbstractVector{<:AbstractChar}) = crates
+order_part2(crates::AbstractCrateStack) = crates
 
 end # module

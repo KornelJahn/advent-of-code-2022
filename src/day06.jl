@@ -1,23 +1,12 @@
-module Day6
+module Day06
 
-export parse_input, solve
+AbstractInput = AbstractString
 
-using ..Puzzle: Day, Part
-import ..Puzzle: parse_input, solve
+parse_input(raw::AbstractString) = strip(raw)
 
-AbstractInput = AbstractVector{<:AbstractString}
+solve_part1(input::AbstractInput) = find_start(input, windowsize=4)
 
-function parse_input(::Day{6}, raw::AbstractString)
-    return split(strip(raw), "\n")
-end
-
-function solve(::Day{6}, ::Part{1}, input::AbstractInput)
-    return Tuple(find_start.(input, windowsize=4))
-end
-
-function solve(::Day{6}, ::Part{2}, input::AbstractInput)
-    return Tuple(find_start.(input, windowsize=14))
-end
+solve_part2(input::AbstractInput) = find_start(input, windowsize=14)
 
 function find_start(msg::AbstractString; windowsize::Int)
     for stop in windowsize:length(msg)

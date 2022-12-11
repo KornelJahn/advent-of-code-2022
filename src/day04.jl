@@ -1,13 +1,8 @@
-module Day4
-
-export parse_input, solve
-
-using ..Puzzle: Day, Part
-import ..Puzzle: parse_input, solve
+module Day04
 
 AbstractInput = AbstractArray{<:Integer, 2}
 
-function parse_input(::Day{4}, raw::AbstractString)
+function parse_input(raw::AbstractString)
     regex = r"^(\d+)-(\d+),(\d+)-(\d+)$"
     lines = split(strip(raw), "\n")
     input = Array{Int}(undef, 4, length(lines))
@@ -17,23 +12,19 @@ function parse_input(::Day{4}, raw::AbstractString)
     return input
 end
 
-function solve(::Day{4}, ::Part{1}, input::AbstractInput)
-    # return sum(are_completely_overlapping.(eachrow(input)...))
-    # NOTE: this solution is faster
-    return sum(are_fully_overlapping(col...) for col in eachcol(input))
-end
+solve_part1(input::AbstractInput) = sum(
+    are_fully_overlapping(col...) for col in eachcol(input)
+)
 
-function solve(::Day{4}, ::Part{2}, input::AbstractInput)
-    # return sum(are_overlapping.(eachrow(input)...))
-    # NOTE: this solution is faster
-    return sum(are_overlapping(col...) for col in eachcol(input))
-end
+solve_part2(input::AbstractInput) = sum(
+    are_overlapping(col...) for col in eachcol(input)
+)
 
-function are_fully_overlapping(a::Integer, b::Integer, c::Integer, d::Integer)
+function are_fully_overlapping(a::T, b::T, c::T, d::T) where {T<:Integer}
     return (max(a, c), min(b, d)) in [(a, b), (c, d)]
 end
 
-function are_overlapping(a::Integer, b::Integer, c::Integer, d::Integer)
+function are_overlapping(a::T, b::T, c::T, d::T) where {T<:Integer}
     return max(a, c) <= min(b, d)
 end
 

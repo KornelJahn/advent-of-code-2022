@@ -1,24 +1,19 @@
-module Day7
-
-export parse_input, solve
-
-using ..Puzzle: Day, Part
-import ..Puzzle: parse_input, solve
+module Day07
 
 # Skip defining a self-referential input type, rely on nested vectors instead
 
-function parse_input(::Day{7}, raw::AbstractString)
+function parse_input(raw::AbstractString)
     # Skip empty string at the head
     commands = split(strip(raw), raw"$ ")[2:end]
     return interpret!(commands)
 end
 
-function solve(::Day{7}, ::Part{1}, input)
+function solve_part1(input)
     sizes = collect(iter_dirs_dfs(input))
     return sum(filter(<=(100000), sizes))
 end
 
-function solve(::Day{7}, ::Part{2}, input)
+function solve_part2(input)
     sizes = collect(iter_dirs_dfs(input))
     TOTAL = sizes[end]
     CAPACITY = 70000000
