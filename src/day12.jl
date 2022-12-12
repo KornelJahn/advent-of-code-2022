@@ -25,11 +25,13 @@ solve_part1(input::Input) = shortest_path_length(input...)
 function solve_part2(input::Input)
     (heightmap, _, stopidx) = input
     start_indices = findall(==('a'), heightmap[:])
-    return (
-        shortest_path_length.(Ref(heightmap), start_indices, Ref(stopidx))
-        |> i->filter(>(0), i)
-        |> minimum
-    )
+    path_lengths = similar(start_indices, Int)
+    Threads.@threads for i in 1:length(start_indices)
+        path_lengths[i] = shortest_path_length(
+            heightmap, start_indices[i], stopidx
+        )
+    end
+    return minimum(filter(>(0), path_lengths))
 end
 
 # Concept: Breadth-First Search on an unweighted graph
