@@ -31,7 +31,6 @@ end
 function parse_stacks(raw::AbstractString)
     lines = split(raw, "\n")
     stack_count = parse(Int, split(strip(lines[end]))[end])
-    # NOTE: a Deque from DataStructures.jl would be more efficient
     stacks = Vector{Vector{Char}}(undef, stack_count)
     for i in 1:stack_count
         stacks[i] = Vector{Char}(undef, 0)
