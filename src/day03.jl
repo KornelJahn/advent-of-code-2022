@@ -1,36 +1,32 @@
 module Day03
 
-AbstractInput = AbstractVector{<:AbstractString}
-
 parse_input(raw::AbstractString) = split(strip(raw), "\n")
 
-solve_part1(input::AbstractInput) = sum(
-    iter_priorities(iter_groups_part1(input))
-)
+Input = AbstractVector{<:AbstractString}
 
-solve_part2(input::AbstractInput) = sum(
-    iter_priorities(iter_groups_part2(input))
-)
+solve_part1(rucksacks::Input) = sum(priorities(compartments(rucksacks)))
 
-iter_priorities(groups) = Channel() do ch
-    for group in groups
+solve_part2(rucksacks::Input) = sum(priorities(groups(rucksacks)))
+
+priorities(item_groups) = Channel() do ch
+    for group in item_groups
         common_item = find_common_item(group...)
         priority = assign_priority(common_item)
         put!(ch, priority)
     end
 end
 
-iter_groups_part1(lines::AbstractInput) = Channel() do ch
+compartments(lines::Input) = Channel() do ch
     for line in lines
         mid = div(length(line), 2)
         put!(ch, (line[1:mid], line[(mid+1):end]))
     end
 end
 
-iter_groups_part2(lines::AbstractInput) = Iterators.partition(lines, 3)
+groups(lines::Input) = Iterators.partition(lines, 3)
 
-function find_common_item(containers::AbstractString...)
-    sets = (Set(container) for container in containers)
+function find_common_item(item_strings::AbstractString...)
+    sets = (Set(s) for s in item_strings)
     common_items = intersect(sets...)
     @assert length(common_items) == 1
     return pop!(common_items)

@@ -1,15 +1,14 @@
 module Day01
 
-AbstractInput = AbstractVector{<:AbstractVector{<:Integer}}
-
 function parse_input(raw::AbstractString)
     groups = split(strip(raw), "\n\n")
-    convert(group) = parse.(Ref(Int), split(strip(group), "\n"))
-    return convert.(groups)
+    return [parse.(Ref(Int), split(strip(group), '\n')) for group in groups]
 end
 
-solve_part1(input::AbstractInput) = maximum(sum.(input))
+Input = AbstractVector{<:AbstractVector{<:Integer}}
 
-solve_part2(input::AbstractInput) = sum(sort(sum.(input), rev=true)[1:3])
+solve_part1(elf_calories::Input) = maximum(sum.(elf_calories))
+
+solve_part2(elf_calories::Input) = sum(sort(sum.(elf_calories), rev=true)[1:3])
 
 end # module

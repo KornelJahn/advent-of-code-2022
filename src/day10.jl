@@ -1,7 +1,5 @@
 module Day10
 
-AbstractInput = AbstractVector{<:Tuple{<:AbstractString, <:Any}}
-
 function parse_input(raw::AbstractString)
     lines = split(strip(raw), '\n')
 
@@ -17,13 +15,15 @@ function parse_input(raw::AbstractString)
     return map(convert_line, lines)
 end
 
-function solve_part1(instructions::AbstractInput)
+Input = AbstractVector{<:Tuple{<:AbstractString, <:Any}}
+
+function solve_part1(instructions::Input)
     Xs = convert_to_register_values(instructions)
     cycles = 20:40:220
     return sum(cycles .* Xs[cycles])
 end
 
-function solve_part2(instructions::AbstractInput)
+function solve_part2(instructions::Input)
     Xs = convert_to_register_values(instructions)
     return draw_screen_output(Xs)
 end
@@ -36,7 +36,7 @@ end
 # Assume eltype of iterables is the same
 cat(iterables...) = Iterators.flatten(iterables)
 
-function convert_to_register_values(instructions::AbstractInput)
+function convert_to_register_values(instructions::Input)
     initial = 1
     diffs = Iterators.flatten(
         convert_to_diffs(instr...) for instr in instructions

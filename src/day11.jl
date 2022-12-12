@@ -1,15 +1,5 @@
 module Day11
 
-const MONKEY_REGEX = Regex(replace(raw"""
-    Monkey \d+:
-      Starting items: (.+)
-      Operation: new = (.+)
-      Test: divisible by (\d+)
-        If true: throw to monkey (\d+)
-        If false: throw to monkey (\d+)""",
-    '\n' => raw"\n"
-))
-
 mutable struct Monkey
     items::Vector{Int}
     inspect::Function
@@ -18,10 +8,18 @@ mutable struct Monkey
     target_false::Int
     counter::Int
 
-    function Monkey(rawstring)
-        rawitems, rawop, rawdiv, rawtrue, rawfalse = match(
-            MONKEY_REGEX, rawstring
-        )
+    function Monkey(rawstring::AbstractString)
+        regex = Regex(replace(raw"""
+            Monkey \d+:
+              Starting items: (.+)
+              Operation: new = (.+)
+              Test: divisible by (\d+)
+                If true: throw to monkey (\d+)
+                If false: throw to monkey (\d+)""",
+            '\n' => raw"\n"
+        ))
+
+        rawitems, rawop, rawdiv, rawtrue, rawfalse = match(regex, rawstring)
         return new(
             parse.(Ref(Int), split(rawitems, ", ")),
             eval(Meta.parse("old->($rawop)")),
@@ -33,7 +31,34 @@ mutable struct Monkey
     end
 end
 
-test(monkey::Monkey, item::Integer) = mod(item, monkey.divisor) == 0
+parse_input(raw::AbstractString) = map(Monkey, split(strip(raw), "\n\n"))
+
+Input = AbstractVector{Monkey}
+
+function solve_part1(monkeys::Input)
+    return calc_business(play_rounds(monkeys, 20, w->div(w, 3)))
+end
+
+function solve_part2(monkeys::Input)
+    p = prod(monkey.divisor for monkey in monkeys)
+    return calc_business(play_rounds(monkeys, 10000, w->mod(w, p)))
+end
+
+function play_rounds(
+    monkeys::Input,
+    round_count::Int,
+    relieve::Function,
+)
+    @assert round_count >= 1
+    monkey_count = length(monkeys)
+    result = deepcopy(monkeys)
+    for i in 1:round_count
+        for j in 1:monkey_count
+            throw!(result[j], result, relieve)
+        end
+    end
+    return result
+end
 
 function throw!(
     monkey::Monkey,
@@ -53,35 +78,9 @@ function throw!(
     empty!(monkey.items)
 end
 
-AbstractInput = AbstractVector{Monkey}
+test(monkey::Monkey, item::Integer) = mod(item, monkey.divisor) == 0
 
-function parse_input(raw::AbstractString)
-    groups = split(strip(raw), "\n\n")
-    return map(Monkey, groups)
-end
-
-function solve_part1(monkeys::AbstractInput)
-    return calculate_level(play_rounds(monkeys, 20, w->div(w, 3)))
-end
-
-function solve_part2(monkeys::AbstractInput)
-    p = prod(monkey.divisor for monkey in monkeys)
-    return calculate_level(play_rounds(monkeys, 10000, w->mod(w, p)))
-end
-
-function play_rounds(monkeys::AbstractInput, round_count::Int, relieve::Function)
-    @assert round_count >= 1
-    monkey_count = length(monkeys)
-    result = deepcopy(monkeys)
-    for i in 1:round_count
-        for j in 1:monkey_count
-            throw!(result[j], result, relieve)
-        end
-    end
-    return result
-end
-
-function calculate_level(monkeys::AbstractInput)
+function calc_business(monkeys::AbstractVector{Monkey})
     return prod(sort(getfield.(monkeys, Ref(:counter)), rev=true)[1:2])
 end
 

@@ -1,32 +1,18 @@
 module Day05
 
-AbstractCrateStack = AbstractVector{<:AbstractChar}
-
-AbstractInput = Tuple{
-    <:AbstractVector{<:AbstractCrateStack},
-    <:AbstractArray{<:Integer, 2}
-}
-
 function parse_input(raw::AbstractString)
     (raw_stacks, raw_instructions) = split(raw, "\n\n")
     return parse_stacks(raw_stacks), parse_instructions(raw_instructions)
 end
 
-solve_part1(input::AbstractInput) = rearranged_top_crates(input, order_part1)
+AbstractCrateStack = AbstractVector{<:AbstractChar}
+AbstractCrateStacks = AbstractVector{<:AbstractCrateStack}
+AbstractInstructions = AbstractArray{<:Integer, 2}
+Input = Tuple{<:AbstractCrateStacks, <:AbstractInstructions}
 
-solve_part2(input::AbstractInput) = rearranged_top_crates(input, order_part2)
+solve_part1(input::Input) = rearrange_top_crates(order_9000, input...)
 
-function rearranged_top_crates(input::AbstractInput, order_func)
-    (stacks, instructions) = input
-    stacks = deepcopy(stacks)
-    for instruction in eachcol(instructions)
-        (qty, source, target) = instruction
-        N = length(stacks[source])
-        transferred = order_func(splice!(stacks[source], (N-qty+1):N))
-        append!(stacks[target], transferred)
-    end
-    return string((stack[end] for stack in stacks)...)
-end
+solve_part2(input::Input) = rearrange_top_crates(order_9001, input...)
 
 function parse_stacks(raw::AbstractString)
     lines = split(raw, "\n")
@@ -35,7 +21,7 @@ function parse_stacks(raw::AbstractString)
     for i in 1:stack_count
         stacks[i] = Vector{Char}(undef, 0)
     end
-    for line in lines[begin:(end-1)]
+    for line in lines[1:(end-1)]
         crates = line[2:4:end]
         for (i, crate) in enumerate(crates)
             if crate != ' '
@@ -56,8 +42,23 @@ function parse_instructions(raw::AbstractString)
     return instructions
 end
 
-order_part1(crates::AbstractCrateStack) = reverse(crates)
+function rearrange_top_crates(
+    order_func::Function,
+    stacks::AbstractCrateStacks,
+    instructions::AbstractInstructions,
+)
+    stacks = deepcopy(stacks)
+    for instruction in eachcol(instructions)
+        (qty, source, target) = instruction
+        N = length(stacks[source])
+        transferred = order_func(splice!(stacks[source], (N-qty+1):N))
+        append!(stacks[target], transferred)
+    end
+    return string((stack[end] for stack in stacks)...)
+end
 
-order_part2(crates::AbstractCrateStack) = crates
+order_9000(crates::AbstractCrateStack) = reverse(crates)
+
+order_9001(crates::AbstractCrateStack) = crates
 
 end # module

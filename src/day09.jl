@@ -11,21 +11,21 @@ function parse_input(raw::AbstractString)
         (rawdir, rawcnt) = split(line)
         return Iterators.repeated(dirs[rawdir[1]], parse(Int, rawcnt))
     end
-    return Iterators.flatten(convert_line_to_iterator.(lines))
+    return collect(Iterators.flatten(convert_line_to_iterator.(lines)))
 end
 
-solve_part1(input) = visited_tail_position_count(input)
+solve_part1(directions) = visited_tail_position_count(directions, knot_count=1)
 
-solve_part2(input) = visited_tail_position_count(input, taillen=9)
+solve_part2(directions) = visited_tail_position_count(directions, knot_count=9)
 
-function visited_tail_position_count(directions; taillen::Int = 1)
+function visited_tail_position_count(directions; knot_count::Int)
     head_history = head_positions(directions)
-    tail_histories = accumulate(
-        (hist, _)->tail_positions(hist),
-        1:taillen,
+    knot_histories = accumulate(
+        (hist, _)->knot_positions(hist),
+        1:knot_count,
         init=head_history
     )
-    return length(unique(tail_histories[end]))
+    return length(unique(knot_histories[end]))
 end
 
 # Assume eltype of iterables is the same
@@ -36,37 +36,37 @@ function head_positions(directions)
     return collect(cat((initial,), accumulate(.+, directions, init=initial)))
 end
 
-function tail_positions(heads)
+function knot_positions(heads)
     initial = (0, 0)
-    return collect(cat((initial,), accumulate(next_tail, heads, init=initial)))
+    return collect(cat((initial,), accumulate(next_knot, heads, init=initial)))
 end
 
 AbstractVec = Tuple{T, T} where {T<:Integer}
 
-function next_tail(tail::T, head::T) where {T<:AbstractVec}
-    # FIXME: make more efficient, relying on the direction vector
-    # from tail to head, rather than their distance (direct computation vs.
-    # minimum search)
-    d = distance_squared(head, tail)
+function next_knot(curr::T, prev::T) where {T<:AbstractVec}
+    # FIXME: make more efficient, relying on the direction vector between the
+    # previous and the current knot, rather than their distance (direct
+    # computation vs. minimum search)
+    d = distance_squared(prev, curr)
     @assert d <= 8
     if d <= 2
-        return tail
+        return curr
     elseif d == 4
-        # Axial head movement
-        return minimum_distance_tail(tail, head, AXIAL_DIRS...)
+        # Axial movement of the previous knot
+        return minimum_distance_knot(curr, prev, AXIAL_DIRS...)
     elseif d >= 5
-        # Diagonal head movement
-        return minimum_distance_tail(tail, head, DIAGONAL_DIRS...)
+        # Diagonal movement of the previous knot
+        return minimum_distance_knot(curr, prev, DIAGONAL_DIRS...)
     end
 end
 
-function minimum_distance_tail(
-    tail::T,
-    head::T,
+function minimum_distance_knot(
+    curr::T,
+    prev::T,
     dirs::T...
 ) where {T<:AbstractVec}
-    tail_options = [tail .+ dir for dir in dirs]
-    return tail_options[argmin(distance_squared.(tail_options, Ref(head)))]
+    options = [curr .+ dir for dir in dirs]
+    return options[argmin(distance_squared.(options, Ref(prev)))]
 end
 
 distance_squared(p::T, q::T) where {T<:AbstractVec} = sum((p .- q).^2)

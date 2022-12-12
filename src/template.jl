@@ -1,16 +1,16 @@
 module DayNN
 
-AbstractInput = Any
-
 function parse_input(raw::AbstractString)
     return nothing
 end
 
-function solve_part1(input::AbstractInput)
+Input = Any
+
+function solve_part1(::Input)
     return nothing
 end
 
-function solve_part2(input::AbstractInput)
+function solve_part2(::Input)
     return nothing
 end
 

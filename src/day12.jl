@@ -2,9 +2,6 @@ module Day12
 
 using DataStructures
 
-AbstractMap = AbstractArray{<:AbstractChar, 2}
-AbstractInput = Tuple{<:AbstractMap, T, T} where {T<:Integer}
-
 function parse_input(raw::AbstractString)
     stripped = strip(raw)
     rowlength = findfirst('\n', stripped) - 1
@@ -19,11 +16,13 @@ function parse_input(raw::AbstractString)
     return heightmap, startidx, stopidx
 end
 
-function solve_part1(input::AbstractInput)
-    return shortest_path_length(input...)
-end
+AbstractMap = AbstractArray{<:AbstractChar, 2}
 
-function solve_part2(input::AbstractInput)
+Input = Tuple{<:AbstractMap, T, T} where {T<:Integer}
+
+solve_part1(input::Input) = shortest_path_length(input...)
+
+function solve_part2(input::Input)
     (heightmap, _, stopidx) = input
     start_indices = findall(==('a'), heightmap[:])
     return (

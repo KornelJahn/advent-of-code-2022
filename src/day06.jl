@@ -1,17 +1,17 @@
 module Day06
 
-AbstractInput = AbstractString
+Input = AbstractString
 
 parse_input(raw::AbstractString) = strip(raw)
 
-solve_part1(input::AbstractInput) = find_start(input, windowsize=4)
+solve_part1(stream::Input) = find_message_marker(stream, windowsize=4)
 
-solve_part2(input::AbstractInput) = find_start(input, windowsize=14)
+solve_part2(stream::Input) = find_message_marker(stream, windowsize=14)
 
-function find_start(msg::AbstractString; windowsize::Int)
-    for stop in windowsize:length(msg)
+function find_message_marker(stream::Input; windowsize::Int)
+    for stop in windowsize:length(stream)
         start = stop - windowsize + 1
-        if is_unique(msg[start:stop])
+        if is_unique(stream[start:stop])
             return stop
         end
     end

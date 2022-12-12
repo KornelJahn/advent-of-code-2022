@@ -1,44 +1,44 @@
 module Day08
 
-AbstractInput = AbstractArray{<:Integer, 2}
-
 function parse_input(raw::AbstractString)
     n = length(collect(Iterators.takewhile(!=('\n'), raw)))
     v = parse.(Int, Vector{Char}(replace(raw, "\n" => "")))
     return reshape(v, (n, n))
 end
 
-solve_part1(input::AbstractInput) = count(
-    I->is_visible(input, Tuple(I)...),
-    CartesianIndices(input)
+Input = AbstractArray{<:Integer, 2}
+
+solve_part1(grid::Input) = count(
+    I->is_visible(grid, Tuple(I)...),
+    CartesianIndices(grid)
 )
 
-solve_part2(input::AbstractInput) = maximum(
-    scenic_score(input, Tuple(I)...) for I in CartesianIndices(input)
+solve_part2(grid::Input) = maximum(
+    scenic_score(grid, Tuple(I)...) for I in CartesianIndices(grid)
 )
 
-is_visible(A::AbstractInput, i::T, j::T) where {T<:Integer} = any(
-    v->all(<(A[i, j]), v),
-    directions(A, i, j)
+is_visible(grid::Input, i::T, j::T) where {T<:Integer} = any(
+    v->all(<(grid[i, j]), v),
+    directions(grid, i, j)
 )
 
-function directions(A::AbstractInput, i::T, j::T) where {T<:Integer}
+function directions(grid::Input, i::T, j::T) where {T<:Integer}
     @views return [
-        A[i, (j-1):-1:1], # up
-        A[i, (j+1):end], # down
-        A[(i-1):-1:1, j], # left
-        A[(i+1):end, j], # right
+        grid[i, (j-1):-1:1], # up
+        grid[i, (j+1):end], # down
+        grid[(i-1):-1:1, j], # left
+        grid[(i+1):end, j], # right
     ]
 end
 
-scenic_score(A::AbstractInput, i::T, j::T) where {T<:Integer} = prod(
-    v->viewing_distance(v, A[i, j]),
-    directions(A, i, j)
+scenic_score(grid::Input, i::T, j::T) where {T<:Integer} = prod(
+    v->viewing_distance(v, grid[i, j]),
+    directions(grid, i, j)
 )
 
-function viewing_distance(v::AbstractVector{<:Integer}, height::Integer)
-    idx = findfirst(>=(height), v)
-    return idx === nothing ? length(v) : idx
+function viewing_distance(heights::AbstractVector{<:Integer}, height::Integer)
+    idx = findfirst(>=(height), heights)
+    return idx === nothing ? length(heights) : idx
 end
 
 end # module

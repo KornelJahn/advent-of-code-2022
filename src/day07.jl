@@ -1,20 +1,18 @@
 module Day07
 
-# Skip defining a self-referential input type, rely on nested vectors instead
-
 function parse_input(raw::AbstractString)
     # Skip empty string at the head
     commands = split(strip(raw), raw"$ ")[2:end]
     return interpret!(commands)
 end
 
-function solve_part1(input)
-    sizes = collect(iter_dirs_dfs(input))
+function solve_part1(dir_tree)
+    sizes = calc_dirsizes(dir_tree)
     return sum(filter(<=(100000), sizes))
 end
 
-function solve_part2(input)
-    sizes = collect(iter_dirs_dfs(input))
+function solve_part2(dir_tree)
+    sizes = calc_dirsizes(dir_tree)
     TOTAL = sizes[end]
     CAPACITY = 70000000
     NEEDED = 30000000
@@ -39,6 +37,10 @@ function interpret!(commands::AbstractVector{<:AbstractString})
     end
     return nodes
 end
+
+calc_dirsizes(dir_tree) = collect(iter_dirs_dfs(dir_tree))
+
+# TODO: Switch to an iterative search?
 
 iter_dirs_dfs(node) = Channel() do ch
     dirs_dfs_inner!(ch, node)
