@@ -1,5 +1,7 @@
 module Day12
 
+using DataStructures
+
 AbstractMap = AbstractArray{<:AbstractChar, 2}
 AbstractInput = Tuple{<:AbstractMap, T, T} where {T<:Integer}
 
@@ -61,20 +63,21 @@ function neighbors(heightmap::AbstractMap, idx::Integer)
 end
 
 function bfs(neighbors::Function, s::T, n::T) where {T<:Integer}
-    # TODO: switch to Deque
-    q = Vector{Int}()
+    # Alternatively a plain Vector could be used instead of a Queue
+    q = Queue{Int}() # Vector{Int}()
     used = falses(n)
     d = zeros(Int, n)
+    # Uncomment lines on `p` to support path reconstruction
     # p = zeros(Int, n)
 
-    push!(q, s)
+    enqueue!(q, s) # push!(q, s)
     used[s] = true
     while !isempty(q)
-        v = popfirst!(q)
+        v = dequeue!(q) # popfirst!(q)
         for u in neighbors(v)
             if !used[u]
                 used[u] = true
-                push!(q, u)
+                enqueue!(q, u) # push!(q, u)
                 d[u] = d[v] + 1;
                 # p[u] = v;
             end
