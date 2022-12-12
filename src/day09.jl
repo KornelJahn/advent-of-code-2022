@@ -44,6 +44,9 @@ end
 AbstractVec = Tuple{T, T} where {T<:Integer}
 
 function next_tail(tail::T, head::T) where {T<:AbstractVec}
+    # FIXME: make more efficient, relying on the direction vector
+    # from tail to head, rather than their distance (direct computation vs.
+    # minimum search)
     d = distance_squared(head, tail)
     @assert d <= 8
     if d <= 2
