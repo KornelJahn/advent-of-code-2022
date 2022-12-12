@@ -10,25 +10,26 @@ Solutions can be tested using both example and real inputs by first installing t
 
 While inside the repository directory, start the Julia REPL and switch to the [Pkg package manager](https://docs.julialang.org/en/v1/stdlib/Pkg/) REPL by pressing `]`. Then execute:
 ```
-(@v1.8) pkg> add .
-(@v1.8) pkg> activate .
+add .
+activate .
 ```
 
 # Testing
 
-Still inside the Pkg REPL (while the working in the repo directory), all tests can simply be run as
+Still inside the **Pkg REPL** (and the repo directory), all tests can simply be run as
 ```
-(AdventOfCode2022) pkgs> test
+test
 ```
 which executes [`test/runtests.jl`](test/runtests.jl).
 
-Testing can be restricted to a specific day by calling function `restrict_test()` in the Julia REPL:
+Testing can be restricted to a specific day by calling function `restrict_test()` in the **Julia REPL** (press backspace to switch back from the Pkg REPL):
 ```
-julia> using AdventOfCode2022
-julia> restrict_test(1)
-(AdventOfCode2022) pkgs> test
+using AdventOfCode2022
+restrict_test(1)
 ```
-The day restriction can be lifted by calling the same function with no arguments:
+Then the selected unit test can be run by calling `test` in the **Pkg REPL**.
+
+The day restriction can be lifted by calling the same function with no arguments in the **Julia REPL**:
 ```
-julia> restrict_test()
+restrict_test()
 ```
