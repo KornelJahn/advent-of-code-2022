@@ -20,36 +20,53 @@ AbstractMap = AbstractArray{<:AbstractChar, 2}
 
 Input = Tuple{<:AbstractMap, T, T} where {T<:Integer}
 
-solve_part1(input::Input) = shortest_path_length(input...)
+abstract type DirectionTrait end
+struct Up <: DirectionTrait end
+struct Down <: DirectionTrait end
+
+solve_part1(input::Input) = shortest_path_length(Up(), input...)
 
 function solve_part2(input::Input)
     (heightmap, _, stopidx) = input
-    start_indices = findall(==('a'), heightmap[:])
-    path_lengths = similar(start_indices, Int)
-    Threads.@threads for i in 1:length(start_indices)
-        path_lengths[i] = shortest_path_length(
-            heightmap, start_indices[i], stopidx
-        )
-    end
-    return minimum(filter(>(0), path_lengths))
+    # Start a single downward search from E that yields shortest path lengths
+    # to all reachable positions
+    path_lengths = shortest_path_lengths(Down(), heightmap, stopidx)
+    pred(height, path_length) = height == 'a' && path_length > 0
+    return minimum(
+        path_length for (height, path_length) in zip(heightmap, path_lengths)
+        if pred(height, path_length)
+    )
 end
 
 # Concept: Breadth-First Search on an unweighted graph
 # https://cp-algorithms.com/graph/breadth-first-search.html#description-of-the-algorithm
 
 function shortest_path_length(
+    direction::DirectionTrait,
     heightmap::AbstractMap,
     startidx::T,
-    stopidx::T
+    stopidx::T,
 ) where {T<:Integer}
     if startidx == stopidx
         return 0
     end
-    d = bfs(i->neighbors(heightmap, i), startidx, length(heightmap))
-    return d[stopidx]
+    return shortest_path_lengths(direction, heightmap, startidx)[stopidx]
 end
 
-function neighbors(heightmap::AbstractMap, idx::Integer)
+function shortest_path_lengths(
+    direction::DirectionTrait,
+    heightmap::AbstractMap,
+    startidx::Integer,
+)
+    d = bfs(i->neighbors(direction, heightmap, i), startidx, length(heightmap))
+    return d
+end
+
+function neighbors(
+    direction::DirectionTrait,
+    heightmap::AbstractMap,
+    idx::Integer
+) where {Dir<:Symbol}
     neighbor_indices = filter(
         i->(1 <= i <= length(heightmap)),
         (
@@ -59,8 +76,11 @@ function neighbors(heightmap::AbstractMap, idx::Integer)
             idx + size(heightmap, 1), # down
         )
     )
-    pred(nidx) = (Int(heightmap[nidx]) - Int(heightmap[idx])) <= 1
-    return filter(pred, neighbor_indices)
+
+    pred(::Up, nidx) = (Int(heightmap[nidx]) - Int(heightmap[idx])) <= 1
+    pred(::Down, nidx) = (Int(heightmap[nidx]) - Int(heightmap[idx])) >= -1
+
+    return filter(i->pred(direction, i), neighbor_indices)
 end
 
 function bfs(neighbors::Function, s::T, n::T) where {T<:Integer}
