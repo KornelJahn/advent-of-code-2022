@@ -1,39 +1,56 @@
 module Day13
 
-# FIXME: brute-force, slow, needs optimization
-
 function parse_input(raw::AbstractString)
     strings = split(replace(strip(raw), "\n\n" => "\n"), '\n')
-    return eval.(Meta.parse.(strings))
+    return convert_string.(strings)
 end
 
-function solve_part1(packets)
+struct InnerNode
+    children::Vector{Union{InnerNode, Int}}
+
+    InnerNode(children...) = new(collect(Union{InnerNode, Int}, children))
+end
+
+Input = AbstractVector{InnerNode}
+
+function solve_part1(packets::Input)
     pairs = Iterators.partition(packets, 2)
     flags = [Bool(is_ordered(pair...)) for pair in pairs]
     return sum(findall(flags))
 end
 
-function solve_part2(packets)
-    dividers = [[[2]], [[6]]]
+function solve_part2(packets::Input)
+    dividers = convert_string.(["[[2]]", "[[6]]"])
     extended = vcat(packets, dividers)
     sorted = sort(extended, lt=is_ordered)
     return prod(findfirst(==(divider), sorted) for divider in dividers)
 end
 
-function is_ordered(left::AbstractVector, right::AbstractVector)
-    for i in 1:min(length(left), length(right))
-        result = is_ordered(left[i], right[i])
+function convert_string(string::AbstractString)
+    return eval(Meta.parse(replace(string, "[" => "InnerNode(", "]" => ")")))
+end
+
+function is_ordered(left::InnerNode, right::InnerNode)
+    lch = left.children
+    rch = right.children
+    for i in 1:min(length(lch), length(rch))
+        result = is_ordered(lch[i], rch[i])
         if !isnothing(result)
             return result
         end
     end
-    return length(left) == length(right) ? nothing : (
-        length(left) < length(right) ? true : false
+    return length(lch) == length(rch) ? nothing : (
+        length(lch) < length(rch) ? true : false
     )
 end
 
-is_ordered(left::AbstractVector, right::Integer) = is_ordered(left, [right])
-is_ordered(left::Integer, right::AbstractVector) = is_ordered([left], right)
+function is_ordered(left::InnerNode, right::Integer)
+    return is_ordered(left, InnerNode(right))
+end
+
+function is_ordered(left::Integer, right::InnerNode)
+    return is_ordered(InnerNode(left), right)
+end
 
 function is_ordered(left::T, right::T) where {T<:Integer}
     return left == right ? nothing : (left < right)
