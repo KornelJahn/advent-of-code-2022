@@ -66,7 +66,7 @@ function neighbors(
     direction::DirectionTrait,
     heightmap::AbstractMap,
     idx::Integer
-) where {Dir<:Symbol}
+)
     neighbor_indices = filter(
         i->(1 <= i <= length(heightmap)),
         (
