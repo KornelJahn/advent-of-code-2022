@@ -76,10 +76,8 @@ function advance!(occupied::Input)
 end
 
 function enlarge(occupied::Input)
-    ymin = first(axes(occupied, 1))
-    ymax = last(axes(occupied, 1))
-    xmin = first(axes(occupied, 2))
-    xmax = last(axes(occupied, 2))
+    (ymin, xmin) = first.(axes(occupied))
+    (ymax, xmax) = last.(axes(occupied))
     new_ymin = ymin
     new_ymax = ymax + 2
     new_xmin = xmin - ymax
@@ -89,7 +87,7 @@ function enlarge(occupied::Input)
         new_ymin:new_ymax,
         new_xmin:new_xmax
     )
-    big_occupied[end, :] .= true
+    big_occupied[end, :] .= true # Floor
     big_occupied[ymin:ymax, xmin:xmax] = occupied
     return big_occupied
 end
