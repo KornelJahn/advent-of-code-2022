@@ -13,14 +13,10 @@ macro include_tests()
     function make_ex(i::Integer)
         str = string(i, base=10, pad=2)
         testpath = joinpath(@__DIR__, "day$(str)_test.jl")
-        if isfile(testpath)
-            return Expr(:call, :include, testpath)
-        else
-            return nothing
-        end
+        return Expr(:call, :include, testpath)
     end
 
-    exs = filter(!isnothing, make_ex.(START:STOP))
+    exs = make_ex.(START:STOP)
     return Expr(:toplevel, exs...)
 end
 
