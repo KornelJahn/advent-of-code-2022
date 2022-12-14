@@ -26,7 +26,7 @@ function parse_input(raw::AbstractString)
     return occupied
 end
 
-Input = AbstractArray{<:Bool, 2}
+Input = AbstractArray{Bool, 2}
 
 function solve_part1(occupied::Input)
     return sand_units_to_fill_cave(occupied)
