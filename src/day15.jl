@@ -45,13 +45,14 @@ function solve_part2(positions::Input; xmax::Int, ymax::Int)
 
     remainders = rect_remainders(initial_rect, squares)
 
-    # Filters rect with one element
+    # Filter rect with a single element only; that will contain the distress
+    # beacon coordinates in the transformed plane
     remainders = filter(A->rect_area(A) == 1, remainders)
 
     @assert length(remainders) == 1
     ((x0p, _), (y0p, _)) = remainders[1]
 
-    # Transform back the distress beacon coordinates into the original space
+    # Transform back the distress beacon coordinates into the coordinate system
     x0 = div(x0p + y0p, 2)
     y0 = div(-x0p + y0p, 2)
 
