@@ -5,8 +5,15 @@ using DataStructures
 function parse_input(raw::AbstractString)
     lines = split(strip(raw), '\n')
     valve_count = length(lines)
-    # Do lexicographic ordering on valve names, so AA valve comes first
-    valvedata = sort(parse_line.(lines), by=tup->tup[1])
+    # Order valves by decreasing flow rate so that states of working valves can
+    # easily fit into a fixed-size bitmask. However, still put valve AA first
+    # so that it is easier to index as the initial valve (by assuming for the
+    # sake of comparison that it has the largest flowrate).
+    valvedata = sort(
+        parse_line.(lines),
+        lt=(t1, t2)->(t1[1] != "AA" && (t2[1] == "AA" || <(t1[2], t2[2]))),
+        rev=true
+    )
     valvenames = Vector{String}(undef, valve_count)
     valveindices = Dict{String, Int}()
     flowrates = Vector{Int}(undef, valve_count)
@@ -31,22 +38,25 @@ struct State
     valvestates::UInt64
     timeleft::Int
     playeridx::Int
+    totalpressure::Int
 end
+
+const MAX_WORKING_VALVE_COUNT = sizeof(fieldtype(State, :valvestates)) * 8
 
 function solve_part1(input::Input)
     (flowrates, neighbors) = input
-    @assert sum(1 for rate in flowrates if rate != 0) <= 64
-    lut = Dict{State, Int}()
+    @assert sum(1 for rate in flowrates if rate != 0) <= MAX_WORKING_VALVE_COUNT
     state = get_initial_state()
-    return total_pressure!(lut, state, flowrates, neighbors)
+    @time result = max_total_pressure(state, flowrates, neighbors)
+    return result
 end
 
 function solve_part2(input::Input)
     (flowrates, neighbors) = input
-    @assert sum(1 for rate in flowrates if rate != 0) <= 64
+    @assert sum(1 for rate in flowrates if rate != 0) <= MAX_WORKING_VALVE_COUNT
     lut = Dict{State, Int}()
     state = get_initial_state(playeridx=2, multiplay=true)
-    return total_pressure!(lut, state, flowrates, neighbors)
+    return max_total_pressure(state, flowrates, neighbors)
 end
 
 function parse_line(line::AbstractString)
@@ -61,93 +71,102 @@ function parse_line(line::AbstractString)
     return valvename, flowrate, neighbors
 end
 
-function get_initial_state(;
+function get_initial_state(
     playeridx::Integer=1,
     multiplay::Bool=false,
     valvestates::UInt64=zero(UInt64),
 )
-    if multiplay
-        return State(1, valvestates, 26, playeridx)
-    else
-        @assert playeridx == 1
-        return State(1, valvestates, 30, 1)
-    end
+    @assert multiplay || playeridx == 1
+    valveidx = 1
+    timeleft = multiplay ? 26 : 30
+    totalpressure = 0
+    return State(valveidx, valvestates, timeleft, playeridx, totalpressure)
 end
 
-# Use a LUT, so previously evaluated states do not get re-evaluated in the
-# recursion (dynamic programming).
-function total_pressure!(
-    lut::Dict{State, Int},
-    state::State,
+# Exhaustive iterative Depth-First Search for max value over the decision tree
+# containing all states
+function max_total_pressure(
+    initialstate::State,
     flowrates::AbstractVector{<:Integer},
-    neighbors::AbstractVector{<:AbstractVector{<:Integer}}
+    neighbors::AbstractVector{<:AbstractVector{<:Integer}},
 )
-    i = state.valveidx
+    lut = Dict{State, Int}()
+    stack = Vector{State}()
+    sizehint!(stack, length(flowrates))
+    result = 0
+    push!(stack, initialstate)
+    while !isempty(stack)
+        state = pop!(stack)
+        if haskey(lut, state)
+            result = lut[state]
+        else
+            result = max(result, state.totalpressure)
+            lut[state] = result
+            push_new_states!(stack, state, flowrates, neighbors)
+        end
+    end
+    return result
+end
+
+# Part 2 observations:
+# - It is clearly suboptimal if the elephant and me go for the same working
+# valves.
+# - The elephant and me could therefore agree beforehand to go for disjoint
+# sets of working valves.
+# - For all possible moves I have made, each resulting in a different history
+# of opening valves, we examine all possible series of actions by the
+# elephant.
+# - It is therefore not needed to consider our actions simultaneously, we could
+# consider it sequentially for the sake of optimization: we simply join the
+# elephant decision tree at the end of each branch of my decision tree.
+function push_new_states!(stack, state, flowrates, neighbors)
     valvestates = state.valvestates
     timeleft = state.timeleft
     playeridx = state.playeridx
+    totalpressure = state.totalpressure
+    i = state.valveidx
 
-    # Maximal pressure is achieved if two players work simultaneously but open
-    # different valves. From the viewpoint of the optimum, it makes no
-    # difference if players work simultaneously or sequentially. Simulate the
-    # latter as it is easy to add to the recursion.
     if timeleft == 0
+        # If time is over and there are multiple players, continue with the
+        # decision tree of the next player given the outcome of the previous
+        # player's moves
         if playeridx > 1
-            return total_pressure!(
-                lut,
-                get_initial_state(
-                    playeridx=playeridx-1,
-                    multiplay=true,
-                    valvestates=valvestates,
-                ),
-                flowrates,
-                neighbors,
-            )
-        else
-            return 0
+            multiplay = true
+            push!(stack, get_initial_state(
+                playeridx - 1,
+                multiplay,
+                valvestates,
+            ))
         end
+        return
     end
 
-    if haskey(lut, state)
-        return lut[state]
-    end
-
-    # Get (i - 1)-th bit (1 for open)
+    # Get (i - 1)-th bit of the `valvestates` bitmask (1 if open)
     is_open = valvestates & (1 << (i - 1)) != 0
-    flowrate = flowrates[i];
+    flowrate = flowrates[i]
 
-    result = 0
-
-    # Calculate total pressure when opening the valve (if it is working)
     if !is_open && flowrate > 0
-        # Set (i - 1)-th bit to 1 (open)
+        # Get (i - 1)-th bit of the `valvestates` bitmask to 1 (open)
         new_valvestates = valvestates | (1 << (i - 1))
-        result = max(
-            result,
-            flowrate * (timeleft - 1) + total_pressure!(
-                lut,
-                State(i, new_valvestates, timeleft - 1, playeridx),
-                flowrates,
-                neighbors,
-            )
-        )
-    end
-    # Calculate total pressure when not touching the valve but moving on to
-    # the neighboring valves
-    for j in neighbors[i]
-        result = max(
-            result,
-            total_pressure!(
-                lut,
-                State(j, valvestates, timeleft - 1, playeridx),
-                flowrates,
-                neighbors,
-            )
-        )
+        push!(stack, State(
+            i,
+            new_valvestates,
+            timeleft - 1,
+            playeridx,
+            totalpressure + flowrate * (timeleft - 1),
+        ))
+        return
     end
 
-    lut[state] = result
-    return result
+    for j in neighbors[i]
+        push!(stack, State(
+            j,
+            valvestates,
+            timeleft - 1,
+            playeridx,
+            totalpressure,
+        ))
+    end
 end
 
 end # module
