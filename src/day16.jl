@@ -5,9 +5,15 @@ using DataStructures
 function parse_input(raw::AbstractString)
     lines = split(strip(raw), '\n')
     valve_count = length(lines)
-    # Do lexicographic ordering on valve names, so AA valve comes first
-    valvedata = sort(parse_line.(lines), by=tup->tup[1])
-    valvenames = Vector{String}(undef, valve_count)
+    # Order valves by decreasing flow rate except the AA valve that must come
+    # first for simplicity. This way, relevant valves have small indices,
+    # ensuring their state can be represented using (almost) the smallest
+    # possible bitmask.
+    valvedata = sort(
+        parse_line.(lines),
+        lt=(t1, t2)->(t1[1] != "AA" && (t2[1] == "AA" || t1[2] < t2[2])),
+        rev=true,
+    )
     valveindices = Dict{String, Int}()
     flowrates = Vector{Int}(undef, valve_count)
     for (i, (name, rate, _)) in enumerate(valvedata)
@@ -76,6 +82,15 @@ end
 
 # Use a LUT, so previously evaluated states do not get re-evaluated in the
 # recursion (dynamic programming).
+#
+# Part 2 remarks:
+# - Maximal pressure is only achieved if two players head for a disjoint set of
+# working valves.
+# - It is not needed to simulate the actions of two players simultaneously. -
+# Instead, a sequential approach can be taken: the actions of the second player
+# (elephant) can be simulated on the set of working valves left closed by the
+# first one.
+
 function total_pressure!(
     lut::Dict{State, Int},
     state::State,
@@ -87,25 +102,17 @@ function total_pressure!(
     timeleft = state.timeleft
     playeridx = state.playeridx
 
-    # Maximal pressure is achieved if two players work simultaneously but open
-    # different valves. From the viewpoint of the optimum, it makes no
-    # difference if players work simultaneously or sequentially. Simulate the
-    # latter as it is easy to add to the recursion.
     if timeleft == 0
-        if playeridx > 1
-            return total_pressure!(
-                lut,
-                get_initial_state(
-                    playeridx=playeridx-1,
-                    multiplay=true,
-                    valvestates=valvestates,
-                ),
-                flowrates,
-                neighbors,
-            )
-        else
-            return 0
-        end
+        return playeridx == 1 ? 0 : total_pressure!(
+            lut,
+            get_initial_state(
+                playeridx=playeridx - 1,
+                multiplay=true,
+                valvestates=valvestates,
+            ),
+            flowrates,
+            neighbors,
+        )
     end
 
     if haskey(lut, state)
@@ -114,11 +121,11 @@ function total_pressure!(
 
     # Get (i - 1)-th bit (1 for open)
     is_open = valvestates & (1 << (i - 1)) != 0
-    flowrate = flowrates[i];
+    flowrate = flowrates[i]
 
     result = 0
 
-    # Calculate total pressure when opening the valve (if it is working)
+    # Consider the total pressure when opening the valve (if it works)
     if !is_open && flowrate > 0
         # Set (i - 1)-th bit to 1 (open)
         new_valvestates = valvestates | (1 << (i - 1))
@@ -132,7 +139,7 @@ function total_pressure!(
             )
         )
     end
-    # Calculate total pressure when not touching the valve but moving on to
+    # Consider the total pressure when not touching the valve but moving on to
     # the neighboring valves
     for j in neighbors[i]
         result = max(
