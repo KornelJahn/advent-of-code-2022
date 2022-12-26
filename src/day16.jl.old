@@ -5,8 +5,15 @@ using DataStructures
 function parse_input(raw::AbstractString)
     lines = split(strip(raw), '\n')
     valve_count = length(lines)
-    # Do lexicographic ordering on valve names, so AA valve comes first
-    valvedata = sort(parse_line.(lines), by=tup->tup[1])
+    # Order valves by decreasing flow rate so that states of working valves can
+    # easily fit into a fixed-size bitmask. However, still put valve AA first
+    # so that it is easier to index as the initial valve (by assuming for the
+    # sake of comparison that it has the largest flowrate).
+    valvedata = sort(
+        parse_line.(lines),
+        lt=(t1, t2)->(t1[1] != "AA" && (t2[1] == "AA" || <(t1[2], t2[2]))),
+        rev=true
+    )
     valvenames = Vector{String}(undef, valve_count)
     valveindices = Dict{String, Int}()
     flowrates = Vector{Int}(undef, valve_count)
@@ -76,6 +83,18 @@ end
 
 # Use a LUT, so previously evaluated states do not get re-evaluated in the
 # recursion (dynamic programming).
+#
+# Part 2 observations:
+# - It is clearly suboptimal if the elephant and me go for the same working
+# valves.
+# - The elephant and me could therefore agree beforehand to go for disjoint
+# sets of working valves.
+# - For all possible moves I have made, each resulting in a different history
+# of opening valves, we examine all possible series of actions by the
+# elephant.
+# - It is therefore not needed to consider our actions simultaneously, we could
+# consider it sequentially for the sake of optimization: we simply join the
+# elephant decision tree at the end of each branch of my decision tree.
 function total_pressure!(
     lut::Dict{State, Int},
     state::State,
@@ -87,10 +106,6 @@ function total_pressure!(
     timeleft = state.timeleft
     playeridx = state.playeridx
 
-    # Maximal pressure is achieved if two players work simultaneously but open
-    # different valves. From the viewpoint of the optimum, it makes no
-    # difference if players work simultaneously or sequentially. Simulate the
-    # latter as it is easy to add to the recursion.
     if timeleft == 0
         if playeridx > 1
             return total_pressure!(
