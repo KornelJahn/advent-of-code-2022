@@ -25,6 +25,6 @@
         input = Day18.parse_input(load_input("day18.txt"))
 
         @test Day18.solve_part1(input) == 4636
-        # @test Day18.solve_part2(input) ==
+        @test Day18.solve_part2(input) == 2572
     end
 end
