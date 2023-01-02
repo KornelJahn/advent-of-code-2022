@@ -36,7 +36,7 @@ struct State
 end
 
 function solve_part1(blueprints::Input)
-    initial_state = State((0, 0, 0, 0), (1, 0, 0, 0), 20)
+    initial_state = State((0, 0, 0, 0), (1, 0, 0, 0), 24)
     sum_quality_levels = 0
     for (id, blueprint) in enumerate(blueprints)
         # DEBUG
@@ -46,7 +46,7 @@ function solve_part1(blueprints::Input)
         println()
         println("Current id: $id")
         println()
-        @time sum_quality_levels += (
+        sum_quality_levels += (
             id * max_geode_count(blueprint, initial_state)
         )
     end
@@ -63,70 +63,70 @@ const OBSIDIAN = 3
 const GEODE = 4
 
 function max_geode_count(blueprint, initial_state)
-    blueprint_max_costs = [
-        max(single_res_costs...)
-        for single_res_costs in zip(blueprint...)
-    ]
-    objective_function(s::State) = -s.resources[GEODE]
-    pruning_predicate(s::State, current_opt_val::Integer) = prunable(
-        blueprint, blueprint_max_costs, s, -current_opt_val
+    objective_function(s::State) = -projected_geode_count(s)
+    prunable_(s::State, current_opt_val::Integer) = prunable(
+        blueprint, s, -current_opt_val
     )
-    isleaf(s::State) = s.timeleft == 0
-    getchildren!(s::State, children::AbstractVector{State}) = possible_moves!(
+    getchildren!(s::State, children::AbstractVector{State}) = feasible_moves!(
         blueprint, s, children
     )
 
     return -objective_function(dfs_solve_pruning(
         initial_state,
         objective_function,
-        pruning_predicate,
-        isleaf,
+        prunable_,
         getchildren!,
     ))
 end
 
-function possible_moves!(blueprint, state, moves)
+@inline unpack(state::State) = (state.resources, state.robots, state.timeleft)
+
+function projected_geode_count(state::State)
+    (res, rob, t) = unpack(state)
+    return res[GEODE] + rob[GEODE] * t
+end
+
+function feasible_moves!(blueprint, state, moves)
     empty!(moves)
-    # Harvest only
-    push!(moves, State(
-        state.resources .+ state.robots,
-        state.robots,
-        state.timeleft - 1
-    ))
-    # Build robot and harvest
+    (res, rob, t) = unpack(state)
+    # Do not build in the last minute
+    if t <= 1
+        return
+    end
     for (kind, cost) in enumerate(blueprint)
-        if all(state.resources .- cost .>= 0)
+        # Build the robot is possible and advance in time
+        buildable = all(@. cost <= (res + rob * t))
+        if buildable
+            # If possible to build a geode robot, this should be the only
+            # option
+            if kind == GEODE
+                empty!(moves)
+            end
+            treq = max(
+                cld.(cost .- res, ifelse.(rob .== 0, typemax(Int), rob))...
+            )
+            @assert treq <= t
             push!(moves, State(
-                state.resources .+ state.robots .- cost,
-                state.robots .+ unit(kind),
-                state.timeleft - 1
+                res .+ rob .* treq .- cost,
+                rob .+ unit(kind),
+                t - treq
             ))
         end
     end
-    return moves
 end
 
 unit(i::T) where {T<:Integer} = NTuple{4, Int}(j == i ? 1 : 0 for j in 1:4)
 
-function prunable(blueprint, blueprint_max_costs, state, current_max_geode_count)
-    t = state.timeleft
-    res = state.resources
-    rob = state.robots
+function prunable(blueprint, state, current_max_geode_count)
+    (res, rob, t) = unpack(state)
 
     prunable = false
     # Prune if projected geode count could not surpass current maximum even if
     # a new geode robot were assembled in each minute left
     prunable |= (
-        (res[GEODE] + rob[GEODE] * t + div(t*(t + 1), 2))
+        (res[GEODE] + rob[GEODE] * t + div(t*(t - 1), 2))
         <= current_max_geode_count
     )
-    # Prune if stacking resources is detected, i.e. the number of a particular
-    # kind of robot is greater than the maximal amount of resources needed for
-    # any other robot
-    prunable |= any(rob .> blueprint_max_costs)
-    # Prune if a geode robot is not bought despite enough resources available
-    prunable |= all(res .> blueprint[GEODE])
-
     return prunable
 end
 
@@ -134,10 +134,9 @@ end
 function dfs_solve_pruning(
     root,
     objective_function::Function,
-    pruning_predicate::Function,
-    isleaf::Function,
+    prunable::Function,
     getchildren!::Function,
-    max_child_count::Integer = 0
+    max_child_count::Integer = 4
 )
     current_optimum_value = typemax(Int)
     current_optimum = root
@@ -146,25 +145,28 @@ function dfs_solve_pruning(
     if max_child_count > 0
         sizehint!(children, max_child_count)
     end
+    cnt = 0
     push!(stack, root)
     while !isempty(stack)
         node = pop!(stack)
-        if isleaf(node)
+        cnt += 1
+        getchildren!(node, children)
+        if isempty(children)
             current_value = objective_function(node)
             if current_value < current_optimum_value
                 current_optimum = node
                 current_optimum_value = current_value
             end
         else
-            getchildren!(node, children)
             for child in children
-                if !pruning_predicate(child, current_optimum_value)
+                if !prunable(child, current_optimum_value)
                     push!(stack, child)
                 end
                 # Otherwise prune branch
             end
         end
     end
+    println("Node count: $cnt")
     return current_optimum
 end
 
