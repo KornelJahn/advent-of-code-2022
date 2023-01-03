@@ -39,16 +39,12 @@ function solve_part1(blueprints::Input)
     initial_state = State((0, 0, 0, 0), (1, 0, 0, 0), 24)
     sum_quality_levels = 0
     for (id, blueprint) in enumerate(blueprints)
-        # DEBUG
-        if id > 1
-            break
-        end
         println()
         println("Current id: $id")
+        gc = max_geode_count(blueprint, initial_state)
+        println("Max geode count: $gc")
         println()
-        sum_quality_levels += (
-            id * max_geode_count(blueprint, initial_state)
-        )
+        sum_quality_levels += id * gc
     end
     return sum_quality_levels
 end
@@ -63,9 +59,13 @@ const OBSIDIAN = 3
 const GEODE = 4
 
 function max_geode_count(blueprint, initial_state)
+    blueprint_max_costs = Tuple(
+        max(single_res_costs...)
+        for single_res_costs in zip(blueprint...)
+    )[1:3]
     objective_function(s::State) = -projected_geode_count(s)
     prunable_(s::State, current_opt_val::Integer) = prunable(
-        blueprint, s, -current_opt_val
+        blueprint, blueprint_max_costs, s, -current_opt_val
     )
     getchildren!(s::State, children::AbstractVector{State}) = feasible_moves!(
         blueprint, s, children
@@ -99,9 +99,9 @@ function feasible_moves!(blueprint, state, moves)
         if buildable
             # If possible to build a geode robot, this should be the only
             # option
-            if kind == GEODE
-                empty!(moves)
-            end
+            # if kind == GEODE
+            #     empty!(moves)
+            # end
             treq = max(
                 cld.(cost .- res, ifelse.(rob .== 0, typemax(Int), rob))...
             )
@@ -117,7 +117,12 @@ end
 
 unit(i::T) where {T<:Integer} = NTuple{4, Int}(j == i ? 1 : 0 for j in 1:4)
 
-function prunable(blueprint, state, current_max_geode_count)
+function prunable(
+    blueprint,
+    blueprint_max_costs,
+    state,
+    current_max_geode_count,
+)
     (res, rob, t) = unpack(state)
 
     prunable = false
@@ -127,6 +132,9 @@ function prunable(blueprint, state, current_max_geode_count)
         (res[GEODE] + rob[GEODE] * t + div(t*(t - 1), 2))
         <= current_max_geode_count
     )
+    # Prune if the number of ore, clay, and obsidian robots is greater than the
+    # maximal amount of resources needed for any other robot
+    prunable |= any(rob[1:3] .> blueprint_max_costs)
     return prunable
 end
 
@@ -145,11 +153,12 @@ function dfs_solve_pruning(
     if max_child_count > 0
         sizehint!(children, max_child_count)
     end
-    cnt = 0
+    total = 0
+    pruned = 0
     push!(stack, root)
     while !isempty(stack)
         node = pop!(stack)
-        cnt += 1
+        total += 1
         getchildren!(node, children)
         if isempty(children)
             current_value = objective_function(node)
@@ -161,12 +170,15 @@ function dfs_solve_pruning(
             for child in children
                 if !prunable(child, current_optimum_value)
                     push!(stack, child)
+                else
+                    # Otherwise prune branch
+                    pruned += 1
                 end
-                # Otherwise prune branch
             end
         end
     end
-    println("Node count: $cnt")
+    println("Total node count: $total")
+    println("Pruned node count: $pruned")
     return current_optimum
 end
 
